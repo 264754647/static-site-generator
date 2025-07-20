@@ -6,9 +6,10 @@ from textnode import TextNode
 from htmlnode import *
 from functions import *
 
-basepath = sys.argv[0]
-if not basepath:
+if len(sys.argv) == 1:
     basepath = "/"
+else:
+    basepath = sys.argv[1]
 
 
 def static_to_public(source_dir, dest_dir):
@@ -27,8 +28,7 @@ def static_to_public(source_dir, dest_dir):
             os.mkdir(path_dest)
             static_to_public(path_source, path_dest)
 
-def generate_page(from_path, template_path, dest_path):
-    global basepath
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, "r", encoding="utf-8") as f:
         from_content = f.read()
@@ -44,23 +44,22 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
-    global basepath
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     contents = os.listdir(dir_path_content)
     for content in contents:
         path = os.path.join(dir_path_content, content)
         if os.path.isfile(path):
             filename = os.path.splitext(content)[0] + ".html"
             dest_path = os.path.join(dest_dir_path, filename)
-            generate_page(path, template_path, dest_path)
+            generate_page(path, template_path, dest_path, basepath)
         else:
             static_to_public(path, os.path.join(dest_dir_path, content))
-            generate_pages_recursive(path, template_path, os.path.join(dest_dir_path, content))
+            generate_pages_recursive(path, template_path, os.path.join(dest_dir_path, content), basepath)
 
-def main():
+def main(basepath):
     if os.path.exists("docs"):
         shutil.rmtree("docs")
     static_to_public("static", "docs")
-    generate_pages_recursive("content", "template.html", "docs")
+    generate_pages_recursive("content", "template.html", "docs", basepath)
 
-main()
+main(basepath)
